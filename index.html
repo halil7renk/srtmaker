@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soz Senkron</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101114;
+      --panel: #181b20;
+      --panel-2: #20242b;
+      --line: #333a44;
+      --text: #f6f3ee;
+      --muted: #aeb5bd;
+      --green: #5ec08d;
+      --gold: #d8b45d;
+      --red: #e07575;
+      --blue: #73a7d8;
+      --focus: rgba(94, 192, 141, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 15px;
+    }
+
+    button, input, textarea {
+      font: inherit;
+    }
+
+    button {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 0 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button:hover { border-color: var(--muted); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.primary { background: var(--green); color: #07110c; border-color: transparent; }
+    button.gold { background: var(--gold); color: #171105; border-color: transparent; }
+    button.blue { background: var(--blue); color: #06111b; border-color: transparent; }
+    button.red { background: var(--red); color: #170707; border-color: transparent; }
+
+    header {
+      height: 58px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 18px;
+      background: #14161a;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--green), var(--gold));
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) minmax(360px, 1fr);
+      min-height: calc(100vh - 58px);
+    }
+
+    aside {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #15181d;
+      padding: 12px;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0d0f12;
+      color: var(--text);
+      padding: 10px;
+      outline: none;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      min-height: 38px;
+      color: var(--muted);
+    }
+
+    textarea {
+      min-height: 210px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .timebar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .clock {
+      font-size: 22px;
+      color: var(--green);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      min-width: 112px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 72px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0d0f12;
+      display: block;
+    }
+
+    .lines {
+      overflow: auto;
+      padding: 12px;
+      min-height: 360px;
+    }
+
+    .line {
+      display: grid;
+      grid-template-columns: 94px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      border-bottom: 1px solid var(--line);
+      padding: 7px 8px;
+      cursor: pointer;
+    }
+
+    .line:last-child { border-bottom: 0; }
+    .line.active {
+      background: var(--focus);
+      outline: 2px solid rgba(94, 192, 141, 0.45);
+      border-radius: 6px;
+    }
+
+    .stamp {
+      color: var(--gold);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+    }
+
+    .text {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      line-height: 1.35;
+    }
+
+    .index {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .output {
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      padding: 12px;
+    }
+
+    .output textarea {
+      min-height: 150px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .status {
+      color: var(--muted);
+      min-height: 20px;
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 860px) {
+      header {
+        height: auto;
+        min-height: 58px;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .timebar {
+        grid-template-columns: 1fr;
+      }
+
+      .line {
+        grid-template-columns: 82px 1fr;
+      }
+
+      .index {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <h1>Soz Senkron</h1>
+    </div>
+    <div class="header-actions">
+      <button class="blue" id="saveProject">Proje indir</button>
+      <button id="loadProjectButton">Proje yukle</button>
+      <input id="loadProject" type="file" accept=".json,application/json" hidden>
+      <button class="red" id="clearAll">Temizle</button>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+      <section class="section">
+        <h2>Dosya</h2>
+        <div class="field">
+          <label for="songTitle">Baslik</label>
+          <input id="songTitle" type="text" value="sarki-sozleri">
+        </div>
+        <div class="field">
+          <label for="audioFile">Ses</label>
+          <input id="audioFile" type="file" accept="audio/*,video/*">
+        </div>
+        <audio id="audio" controls></audio>
+      </section>
+
+      <section class="section">
+        <h2>Sozler</h2>
+        <textarea id="lyricsInput" spellcheck="false" placeholder="Sozleri satir satir yapistir"></textarea>
+        <div class="toolbar">
+          <button class="primary" id="prepare">Satirlari hazirla</button>
+          <button id="removeEmpty">Boslari sil</button>
+        </div>
+        <div class="status" id="inputStatus"></div>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="timebar">
+        <div class="clock" id="clock">00:00.000</div>
+        <canvas id="wave" width="900" height="144"></canvas>
+        <div class="toolbar">
+          <button class="primary" id="markLine">Isaretle</button>
+          <button id="undo">Geri al</button>
+          <button id="nudgeBack">-0.25</button>
+          <button id="nudgeForward">+0.25</button>
+        </div>
+      </div>
+
+      <div class="lines" id="lines"></div>
+
+      <div class="output">
+        <div class="toolbar">
+          <span class="pill" id="progress">0 / 0</span>
+          <button class="gold" id="buildSrt">SRT olustur</button>
+          <button class="primary" id="downloadSrt">SRT indir</button>
+          <button id="copySrt">SRT kopyala</button>
+        </div>
+        <textarea id="srtOutput" spellcheck="false"></textarea>
+        <div class="status" id="status"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const els = {
+      songTitle: document.getElementById("songTitle"),
+      audioFile: document.getElementById("audioFile"),
+      audio: document.getElementById("audio"),
+      lyricsInput: document.getElementById("lyricsInput"),
+      prepare: document.getElementById("prepare"),
+      removeEmpty: document.getElementById("removeEmpty"),
+      inputStatus: document.getElementById("inputStatus"),
+      clock: document.getElementById("clock"),
+      wave: document.getElementById("wave"),
+      lines: document.getElementById("lines"),
+      markLine: document.getElementById("markLine"),
+      undo: document.getElementById("undo"),
+      nudgeBack: document.getElementById("nudgeBack"),
+      nudgeForward: document.getElementById("nudgeForward"),
+      buildSrt: document.getElementById("buildSrt"),
+      downloadSrt: document.getElementById("downloadSrt"),
+      copySrt: document.getElementById("copySrt"),
+      srtOutput: document.getElementById("srtOutput"),
+      status: document.getElementById("status"),
+      progress: document.getElementById("progress"),
+      saveProject: document.getElementById("saveProject"),
+      loadProjectButton: document.getElementById("loadProjectButton"),
+      loadProject: document.getElementById("loadProject"),
+      clearAll: document.getElementById("clearAll")
+    };
+
+    const state = {
+      lines: [],
+      marks: [],
+      current: 0,
+      audioName: "",
+      audioUrl: "",
+      waveform: []
+    };
+
+    function cleanTitle(value) {
+      return (value || "sarki-sozleri")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .slice(0, 80) || "sarki-sozleri";
+    }
+
+    function shortTime(seconds) {
+      if (seconds == null || Number.isNaN(seconds)) return "--:--.---";
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60);
+      const ms = Math.round((seconds - Math.floor(seconds)) * 1000);
+      return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}.${String(ms).padStart(3, "0")}`;
+    }
+
+    function srtTime(seconds) {
+      seconds = Math.max(0, seconds);
+      const hour = Math.floor(seconds / 3600);
+      const min = Math.floor((seconds % 3600) / 60);
+      const sec = Math.floor(seconds % 60);
+      const ms = Math.round((seconds - Math.floor(seconds)) * 1000);
+      return `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")},${String(ms).padStart(3, "0")}`;
+    }
+
+    function prepareLines(keepEmpty) {
+      const raw = els.lyricsInput.value.split(/\r?\n/);
+      state.lines = raw
+        .map(line => line.trim())
+        .filter(line => keepEmpty || line.length > 0);
+      state.marks = Array(state.lines.length).fill(null);
+      state.current = 0;
+      els.inputStatus.textContent = `${state.lines.length} satir hazir.`;
+      renderLines();
+      buildSrt(false);
+    }
+
+    function renderLines() {
+      els.lines.innerHTML = "";
+      state.lines.forEach((line, index) => {
+        const row = document.createElement("div");
+        row.className = "line" + (index === state.current ? " active" : "");
+        row.innerHTML = `
+          <div class="stamp">${shortTime(state.marks[index])}</div>
+          <div class="text">${escapeHtml(line)}</div>
+          <div class="index">${index + 1}</div>
+        `;
+        row.addEventListener("click", () => {
+          state.current = index;
+          renderLines();
+        });
+        els.lines.appendChild(row);
+      });
+      const done = state.marks.filter(value => value != null).length;
+      els.progress.textContent = `${done} / ${state.lines.length}`;
+      const active = els.lines.querySelector(".active");
+      if (active) active.scrollIntoView({ block: "nearest" });
+      persist();
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function markLine() {
+      if (!state.lines.length) {
+        els.status.textContent = "Once soz satirlarini hazirla.";
+        return;
+      }
+      state.marks[state.current] = els.audio.currentTime || 0;
+      state.current = Math.min(state.lines.length - 1, state.current + 1);
+      renderLines();
+      buildSrt(false);
+    }
+
+    function undo() {
+      if (!state.lines.length) return;
+      if (state.marks[state.current] == null && state.current > 0) state.current -= 1;
+      state.marks[state.current] = null;
+      renderLines();
+      buildSrt(false);
+    }
+
+    function nudge(delta) {
+      const index = state.marks[state.current] != null ? state.current : state.current - 1;
+      if (index < 0 || state.marks[index] == null) return;
+      state.marks[index] = Math.max(0, state.marks[index] + delta);
+      renderLines();
+      buildSrt(false);
+    }
+
+    function buildSrt(showStatus) {
+      let out = "";
+      let count = 0;
+      const duration = Number.isFinite(els.audio.duration) ? els.audio.duration : null;
+      for (let i = 0; i < state.lines.length; i++) {
+        const start = state.marks[i];
+        if (start == null) break;
+        let end = state.marks[i + 1] != null ? state.marks[i + 1] - 0.08 : start + 4;
+        if (i === state.lines.length - 1 && duration) end = Math.min(duration, start + 8);
+        end = Math.max(start + 0.7, end);
+        out += `${i + 1}\n${srtTime(start)} --> ${srtTime(end)}\n${state.lines[i]}\n\n`;
+        count++;
+      }
+      els.srtOutput.value = out.trim();
+      if (showStatus) {
+        if (!state.lines.length) els.status.textContent = "Soz bulunamadi.";
+        else if (!count) els.status.textContent = "Henuz isaretlenmis satir yok.";
+        else if (count < state.lines.length) els.status.textContent = `${count} satirlik SRT hazir.`;
+        else els.status.textContent = "SRT hazir.";
+      }
+      return count;
+    }
+
+    function downloadText(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 500);
+    }
+
+    function downloadSrt() {
+      const count = buildSrt(true);
+      if (!count) return;
+      downloadText(`${cleanTitle(els.songTitle.value)}.srt`, els.srtOutput.value + "\n", "text/plain;charset=utf-8");
+      els.status.textContent = count === state.lines.length ? "SRT indirildi." : `${count} satirlik SRT indirildi.`;
+    }
+
+    async function copySrt() {
+      const count = buildSrt(true);
+      if (!count) return;
+      try {
+        await navigator.clipboard.writeText(els.srtOutput.value);
+        els.status.textContent = "SRT kopyalandi.";
+      } catch {
+        els.srtOutput.focus();
+        els.srtOutput.select();
+        els.status.textContent = "Metin secildi. Kopyalama komutunu kullanabilirsin.";
+      }
+    }
+
+    function saveProject() {
+      const project = {
+        title: els.songTitle.value,
+        lyrics: els.lyricsInput.value,
+        lines: state.lines,
+        marks: state.marks,
+        current: state.current,
+        audioName: state.audioName
+      };
+      downloadText(`${cleanTitle(els.songTitle.value)}-proje.json`, JSON.stringify(project, null, 2), "application/json;charset=utf-8");
+    }
+
+    async function loadProject(file) {
+      const text = await file.text();
+      const project = JSON.parse(text);
+      els.songTitle.value = project.title || "sarki-sozleri";
+      els.lyricsInput.value = project.lyrics || "";
+      state.lines = Array.isArray(project.lines) ? project.lines : [];
+      state.marks = Array.isArray(project.marks) ? project.marks : Array(state.lines.length).fill(null);
+      state.current = typeof project.current === "number" ? Math.min(state.lines.length - 1, Math.max(0, project.current)) : 0;
+      state.audioName = project.audioName || "";
+      els.inputStatus.textContent = state.audioName ? `Proje yuklendi. Ses: ${state.audioName}` : "Proje yuklendi.";
+      renderLines();
+      buildSrt(false);
+    }
+
+    function persist() {
+      const snapshot = {
+        title: els.songTitle.value,
+        lyrics: els.lyricsInput.value,
+        lines: state.lines,
+        marks: state.marks,
+        current: state.current,
+        audioName: state.audioName
+      };
+      localStorage.setItem("sozSenkronProject", JSON.stringify(snapshot));
+    }
+
+    function restore() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("sozSenkronProject") || "null");
+        if (!saved) return;
+        els.songTitle.value = saved.title || "sarki-sozleri";
+        els.lyricsInput.value = saved.lyrics || "";
+        state.lines = Array.isArray(saved.lines) ? saved.lines : [];
+        state.marks = Array.isArray(saved.marks) ? saved.marks : [];
+        state.current = typeof saved.current === "number" ? saved.current : 0;
+        state.audioName = saved.audioName || "";
+      } catch {}
+    }
+
+    async function drawWaveform(file) {
+      const canvas = els.wave;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0d0f12";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      try {
+        const buffer = await file.arrayBuffer();
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const decoded = await audioContext.decodeAudioData(buffer.slice(0));
+        const data = decoded.getChannelData(0);
+        const samples = canvas.width;
+        const step = Math.floor(data.length / samples);
+        const amp = canvas.height / 2;
+        state.waveform = [];
+        ctx.strokeStyle = "#5ec08d";
+        ctx.beginPath();
+        for (let i = 0; i < samples; i++) {
+          let min = 1;
+          let max = -1;
+          for (let j = 0; j < step; j++) {
+            const datum = data[(i * step) + j] || 0;
+            if (datum < min) min = datum;
+            if (datum > max) max = datum;
+          }
+          state.waveform.push({ min, max });
+          ctx.moveTo(i, (1 + min) * amp);
+          ctx.lineTo(i, (1 + max) * amp);
+        }
+        ctx.stroke();
+        await audioContext.close();
+      } catch {
+        ctx.fillStyle = "#aeb5bd";
+        ctx.fillText("Dalga formu olusturulamadi", 16, 40);
+      }
+    }
+
+    function drawPlayhead() {
+      const canvas = els.wave;
+      const ctx = canvas.getContext("2d");
+      if (!Number.isFinite(els.audio.duration) || !els.audio.duration) return;
+      if (!state.waveform.length) return;
+      drawStaticOverlay();
+      const x = (els.audio.currentTime / els.audio.duration) * canvas.width;
+      ctx.strokeStyle = "#d8b45d";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+
+    function drawStaticOverlay() {
+      const canvas = els.wave;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0d0f12";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#5ec08d";
+      ctx.globalAlpha = 0.95;
+      ctx.beginPath();
+      const mid = canvas.height / 2;
+      for (let i = 0; i < state.waveform.length; i++) {
+        const item = state.waveform[i];
+        ctx.moveTo(i, mid + item.min * mid);
+        ctx.lineTo(i, mid + item.max * mid);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    els.audioFile.addEventListener("change", async () => {
+      const file = els.audioFile.files[0];
+      if (!file) return;
+      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      state.audioUrl = URL.createObjectURL(file);
+      state.audioName = file.name;
+      els.audio.src = state.audioUrl;
+      els.songTitle.value = cleanTitle(file.name.replace(/\.[^.]+$/, ""));
+      els.inputStatus.textContent = file.name;
+      await drawWaveform(file);
+      persist();
+    });
+
+    els.prepare.addEventListener("click", () => prepareLines(false));
+    els.removeEmpty.addEventListener("click", () => {
+      els.lyricsInput.value = els.lyricsInput.value
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean)
+        .join("\n");
+      prepareLines(false);
+    });
+    els.markLine.addEventListener("click", markLine);
+    els.undo.addEventListener("click", undo);
+    els.nudgeBack.addEventListener("click", () => nudge(-0.25));
+    els.nudgeForward.addEventListener("click", () => nudge(0.25));
+    els.buildSrt.addEventListener("click", () => buildSrt(true));
+    els.downloadSrt.addEventListener("click", downloadSrt);
+    els.copySrt.addEventListener("click", copySrt);
+    els.saveProject.addEventListener("click", saveProject);
+    els.loadProjectButton.addEventListener("click", () => els.loadProject.click());
+    els.loadProject.addEventListener("change", () => {
+      const file = els.loadProject.files[0];
+      if (file) loadProject(file);
+    });
+    els.clearAll.addEventListener("click", () => {
+      localStorage.removeItem("sozSenkronProject");
+      state.lines = [];
+      state.marks = [];
+      state.current = 0;
+      els.lyricsInput.value = "";
+      els.srtOutput.value = "";
+      els.inputStatus.textContent = "";
+      els.status.textContent = "";
+      renderLines();
+    });
+
+    els.lyricsInput.addEventListener("input", persist);
+    els.songTitle.addEventListener("input", persist);
+    els.audio.addEventListener("timeupdate", () => {
+      els.clock.textContent = shortTime(els.audio.currentTime || 0);
+      drawPlayhead();
+    });
+
+    document.addEventListener("keydown", event => {
+      const tag = document.activeElement && document.activeElement.tagName;
+      const typing = tag === "TEXTAREA" || tag === "INPUT";
+      if (event.code === "Space" && !typing) {
+        event.preventDefault();
+        markLine();
+      }
+    });
+
+    restore();
+    renderLines();
+    buildSrt(false);
+  </script>
+</body>
+</html>
